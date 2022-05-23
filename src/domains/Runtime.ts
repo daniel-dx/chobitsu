@@ -43,9 +43,11 @@ export async function callFunctionOn(params: any) {
   }
 }
 
+// 这个需要提前执行，否则 onload 周期里面的 console 信息会丢失
+monitorConsole()
 export function enable() {
   uncaught.start()
-  monitorConsole()
+  // monitorConsole()
   connector.trigger('Runtime.executionContextCreated', {
     context: executionContext,
   })
