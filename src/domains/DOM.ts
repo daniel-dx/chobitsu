@@ -3,7 +3,7 @@ import * as stringifyNode from '../lib/stringifyNode'
 import { getNode, getNodeId } from '../lib/stringifyNode'
 import * as stringifyObj from '../lib/stringifyObj'
 import mutationObserver from '../lib/mutationObserver'
-import { $, isNull, isEmpty, html, map, unique } from 'licia-es'
+import { $, isNull, html, map, unique } from 'licia-es'
 import { setGlobal } from '../lib/evaluate'
 import { contain, lowerCase, each, toArr, xpath, concat } from 'licia-es'
 import { createId } from '../lib/util'
@@ -288,55 +288,56 @@ mutationObserver.on('attributes', (target: any, name: string) => {
   }
 })
 
-mutationObserver.on(
-  'childList',
-  (target: Node, addedNodes: NodeList, removedNodes: NodeList) => {
-    const parentNodeId = getNodeId(target)
-    if (!parentNodeId) return
+// FIXME: 在 WEDA 场景，预览区的加载逻辑会导致这边的 DOM 更新出问题，去掉反而没有问题，因为在 devtools 展开，或者在 target 点选，都会重新加载 DOM 结构
+// mutationObserver.on(
+//   'childList',
+//   (target: Node, addedNodes: NodeList, removedNodes: NodeList) => {
+//     const parentNodeId = getNodeId(target)
+//     if (!parentNodeId) return
 
-    function childNodeCountUpdated() {
-      connector.trigger('DOM.childNodeCountUpdated', {
-        childNodeCount: stringifyNode.wrap(target, {
-          depth: 0,
-        }).childNodeCount,
-        nodeId: parentNodeId,
-      })
-    }
+//     function childNodeCountUpdated() {
+//       connector.trigger('DOM.childNodeCountUpdated', {
+//         childNodeCount: stringifyNode.wrap(target, {
+//           depth: 0,
+//         }).childNodeCount,
+//         nodeId: parentNodeId,
+//       })
+//     }
 
-    if (!isEmpty(addedNodes)) {
-      childNodeCountUpdated()
-      for (let i = 0, len = addedNodes.length; i < len; i++) {
-        const node = addedNodes[i]
-        const previousNode = stringifyNode.getPreviousNode(node)
-        const previousNodeId = previousNode ? getNodeId(previousNode) : 0
-        const params: any = {
-          node: stringifyNode.wrap(node, {
-            depth: 0,
-          }),
-          parentNodeId,
-          previousNodeId,
-        }
+//     if (!isEmpty(addedNodes)) {
+//       childNodeCountUpdated()
+//       for (let i = 0, len = addedNodes.length; i < len; i++) {
+//         const node = addedNodes[i]
+//         const previousNode = stringifyNode.getPreviousNode(node)
+//         const previousNodeId = previousNode ? getNodeId(previousNode) : 0
+//         const params: any = {
+//           node: stringifyNode.wrap(node, {
+//             depth: 0,
+//           }),
+//           parentNodeId,
+//           previousNodeId,
+//         }
 
-        connector.trigger('DOM.childNodeInserted', params)
-      }
-    }
+//         connector.trigger('DOM.childNodeInserted', params)
+//       }
+//     }
 
-    if (!isEmpty(removedNodes)) {
-      for (let i = 0, len = removedNodes.length; i < len; i++) {
-        const node = removedNodes[i]
-        const nodeId = getNodeId(node)
-        if (!nodeId) {
-          childNodeCountUpdated()
-          break
-        }
-        connector.trigger('DOM.childNodeRemoved', {
-          nodeId: getNodeId(node),
-          parentNodeId,
-        })
-      }
-    }
-  }
-)
+//     if (!isEmpty(removedNodes)) {
+//       for (let i = 0, len = removedNodes.length; i < len; i++) {
+//         const node = removedNodes[i]
+//         const nodeId = getNodeId(node)
+//         if (!nodeId) {
+//           childNodeCountUpdated()
+//           break
+//         }
+//         connector.trigger('DOM.childNodeRemoved', {
+//           nodeId: getNodeId(node),
+//           parentNodeId,
+//         })
+//       }
+//     }
+//   }
+// )
 
 mutationObserver.on('characterData', (target: Node) => {
   const nodeId = getNodeId(target)
